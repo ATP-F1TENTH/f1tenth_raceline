@@ -60,6 +60,7 @@ class PurePursuit(Node):
         self.__sub_odom # prevent unused variable warning
 
         #create services
+        """ Deactivate for simulation
         self.__services = {}
         self.__services["underglow"]        = self.create_client(ae_srv.Underglow,      '/carAest/underglow')
         
@@ -67,6 +68,7 @@ class PurePursuit(Node):
         for service in self.__services.values():
             while not service.wait_for_service(timeout_sec=1.0):
                 self.get_logger().info(f'{service} service not available, waiting again...')
+        """
         
 
         #parameters to filter the steering signal before its given to the VESC
@@ -419,7 +421,7 @@ class PurePursuit(Node):
         dev_val = min(abs(current_distance_from_raceline), max_dev)
         red = dev_val / max_dev
         green = 1.0-red
-        self.__services["underglow"].call_async(ae_srv.Underglow.Request(glow=self.get_underglow_msg([int(red*255),int(green*255),0])))
+        # self.__services["underglow"].call_async(ae_srv.Underglow.Request(glow=self.get_underglow_msg([int(red*255),int(green*255),0])))
 
     def publish_telemetry(self, next_waypoint_id, pos_x_map, pos_y_map, target_velocity, actual_velocity, lateral_derivation):
         msg = Telemetry()
