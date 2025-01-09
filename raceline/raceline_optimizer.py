@@ -244,17 +244,17 @@ def main():
     num_changes_per_mutation    = 2        #number of controlpoint changes during a mutation
 
 
-    opt = RacelineOptimizer("/Users/wette/Documents/FHBielefeld/eigeneVorlesungen/F110/repositories/wette_racecar_ws/minden.yaml")
+    opt = RacelineOptimizer("/tmp/testLarte.yaml")
     
     #for development: fixed start trajectory - in production this should come from waypoints sampled from follow the gap algorithm.
-    #x,y = opt.get_manual_initial_centerline()
+    x,y = opt.get_manual_initial_centerline()
 
     #minden city speedway initial trajectory
     #x = [167, 191, 212, 243, 273, 302, 319, 328, 329, 321, 311, 296, 279, 263, 246, 233, 226, 213, 197, 186, 183, 184, 193, 203, 209, 199, 185, 165, 139, 115, 98, 81, 77, 83, 96, 110, 117, 118, 111, 109, 117, 130, 146]
     #y = [28, 27, 24, 22, 21, 23, 40, 61, 85, 104, 122, 128, 131, 128, 122, 106, 78, 68, 68, 79, 88, 101, 111, 125, 143, 154, 158, 157, 157, 155, 154, 144, 130, 114, 105, 93, 79, 65, 53, 39, 30, 25, 24, 28]
 
-    x = [189, 218, 251, 272, 291, 306, 317, 321, 321, 317, 311, 298, 279, 262, 250, 243, 235, 228, 215, 198, 189, 187, 190, 199, 205, 205, 195, 178, 159, 140, 122, 101, 84, 75, 77, 90, 102, 110, 114, 111, 110, 111, 120, 139, 162]
-    y = [24, 22, 19, 17, 18, 21, 33, 51, 84, 108, 126, 136, 137, 129, 117, 105, 91, 79, 70, 69, 77, 90, 102, 110, 124, 139, 148, 151, 152, 153, 155, 155, 154, 142, 127, 114, 106, 96, 82, 68, 57, 45, 36, 30, 26]
+    #x = [189, 218, 251, 272, 291, 306, 317, 321, 321, 317, 311, 298, 279, 262, 250, 243, 235, 228, 215, 198, 189, 187, 190, 199, 205, 205, 195, 178, 159, 140, 122, 101, 84, 75, 77, 90, 102, 110, 114, 111, 110, 111, 120, 139, 162]
+    #y = [24, 22, 19, 17, 18, 21, 33, 51, 84, 108, 126, 136, 137, 129, 117, 105, 91, 79, 70, 69, 77, 90, 102, 110, 124, 139, 148, 151, 152, 153, 155, 155, 154, 142, 127, 114, 106, 96, 82, 68, 57, 45, 36, 30, 26]
 
 
     """#max_change_per_point_meters must be smaller than half desired_points_per_meter
