@@ -1,32 +1,33 @@
+
 import os
 import sys
+import yaml
+import math
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
-#uses https://github.com/AtsushiSakai/pycubicspline
-import pycubicspline.pycubicspline as pyspline
+from matplotlib import pyplot
+from pycubicspline.pycubicspline import calc_2d_spline_interpolation as interpolate2d
 from trajectory import Trajectory, VehicleDescription
 from map import Map
 
-import yaml
-import math
-from matplotlib import pyplot 
-import random
 
 class RacelineOptimizer:
-    def __init__(self, configfile: str):
+    
+    def __init__(self, configfile: str) -> None:
         self.__config = None
-        
         self.parse_config(configfile)
         #reconstruct filepath:
         path = "/".join(configfile.split("/")[0:-1])
         self.__map = Map(path + "/" + self.__config["image"], self.__config["origin"], self.__config["resolution"])
 
-    def get_map(self) -> Map:
+    @property
+    def map(self) -> Map:
         return self.__map
 
-    def get_config(self) -> dict:
+    @property
+    def config(self) -> dict:
         return self.__config
 
     def debug_draw_map(self):
@@ -36,7 +37,7 @@ class RacelineOptimizer:
     def debug_draw_trajectory(self, trajectory : Trajectory, filename: str = None, title: str = None):
         pyplot.imshow(self.__map.get_pixel_map())
 
-        lx,ly, _, curvature, _ = pyspline.calc_2d_spline_interpolation(trajectory.x + trajectory.x[1:2], trajectory.y + trajectory.y[1:2], num=300)
+        lx,ly, _, curvature, _ = interpolate2d(trajectory.x + trajectory.x[1:2], trajectory.y + trajectory.y[1:2], num=300)
 
         rl = Trajectory(lx, ly, trajectory.get_vehicle_description(), trajectory.resolution, curvature=curvature)
         rl.do_forwards_pass = True
@@ -57,8 +58,6 @@ class RacelineOptimizer:
                 pyplot.show()
         except:
             print(f"could not save image to file {filename}")
-
-        
 
     def get_manual_initial_centerline(self, num_control_points = 200) -> tuple[int, int]:
         """
@@ -98,7 +97,7 @@ class RacelineOptimizer:
         print(ys)
 
         #interpolate:
-        x, y, yaw, k, travel = pyspline.calc_2d_spline_interpolation(xs, ys, num=num_control_points)
+        x, y, yaw, k, travel = interpolate2d(xs, ys, num=num_control_points)
         
         print(f"Initial Lap Length [m]: {max(travel) * self.__config['resolution']}")
 
@@ -109,11 +108,19 @@ class RacelineOptimizer:
         self.__config = yaml.safe_load(f)
         f.close()
 
-    def optimize_raceline(self, initial_trajectory: Trajectory, turning_radius_m: float, 
-                          num_epochs=250, num_keep=20, num_population=200, 
-                          max_change_in_pixels=3, num_changes_per_mutation=1,
-                          filename="my_map_raceline.csv", num_points_file=300, 
-                          num_ctrl_points=40) -> Trajectory:
+    def optimize_raceline(
+        self,
+        initial_trajectory: Trajectory,
+        turning_radius_m: float, 
+        num_epochs=250,
+        num_keep=20,
+        num_population=200, 
+        max_change_in_pixels=3,
+        num_changes_per_mutation=1,
+        filename="my_map_raceline.csv",
+        num_points_file=300, 
+        num_ctrl_points=40
+    ) -> Trajectory:
         """use a genetic algorithm to find a raceline"""
 
         def remove_all_but_top(population: list, num_keep: int):
@@ -169,7 +176,7 @@ class RacelineOptimizer:
             max_curvature = 1.0 / (turning_radius_m/population[0].resolution)
             vehicle_width_in_map_pixels = math.ceil(population[0].vehicle_width_m / self.__config['resolution'])
             for l in population[:]:
-                lx,ly, _, curvature, _ = pyspline.calc_2d_spline_interpolation(l.x, l.y, num=500)
+                lx,ly, _, curvature, _ = interpolate2d(l.x, l.y, num=500)
 
                 #check curvature:
                 curvature_ok = True
@@ -224,66 +231,49 @@ class RacelineOptimizer:
         return population[-1]
     
 
-def main():
-    haftreibung                 = 5.0   #kg force to move standing vehicle in lateral direction
-    vehicle_mass_kg             = 3.0
-    vehicle_width_m             = 0.6#0.3      #half width is minimum distance to any wall at any time
-    vehicle_length_m            = 0.5
-    vehicle_acceleration_mss    = 7.0     #vehicle acceleration in meters/sec/sec
-    vehicle_deceleration_mss    = 3.0     #vehicle deceleration in meters/sec/sec
-    turning_radius_m            = 1.2/2.0 #1.0/2.0      #turning radius of the vehicle in meters
-    min_steering_angle_deg      = -25
-    max_steering_angle_deg      = 25
+def main(config_file: str = None):
 
-    desired_points_per_meter    = 1.0      #how many control points to use during optimization per spline (you want as few as possible!)
-    max_change_per_point_meters = 0.5      #how much change to a controlpoint per iteration in meters (should be pretty small; few cm)
+    # load yaml config and get subclasses
+    with open(config_file, 'r') as file:
+        try:
+            config_parameter = yaml.safe_load(file)['optimization_parameter']
+            vehicle_parameter = config_parameter['vehicle_settings']
+            raceline_settings = config_parameter['raceline_settings']
+            evolution_settings = config_parameter['evolution_settings']
+        except Exception as e:
+            print(e)
 
-    num_epochs                  = 25       #number of optimization epochs
-    num_keep                    = 50      #number of trajectories to keep after each epoch
-    num_population              = 1000     #population size during epoch
-    num_changes_per_mutation    = 2        #number of controlpoint changes during a mutation
-
-
-    opt = RacelineOptimizer("/tmp/testLarte.yaml")
+    # create optimizer instance
+    opt = RacelineOptimizer(raceline_settings['map_path'])
+    map_resolution = opt.config['resolution']
     
-    #for development: fixed start trajectory - in production this should come from waypoints sampled from follow the gap algorithm.
-    x,y = opt.get_manual_initial_centerline()
+    # for development: fixed start trajectory - in production this should come from waypoints sampled from follow the gap algorithm.
+    x, y = opt.get_manual_initial_centerline()
 
-    #minden city speedway initial trajectory
-    #x = [167, 191, 212, 243, 273, 302, 319, 328, 329, 321, 311, 296, 279, 263, 246, 233, 226, 213, 197, 186, 183, 184, 193, 203, 209, 199, 185, 165, 139, 115, 98, 81, 77, 83, 96, 110, 117, 118, 111, 109, 117, 130, 146]
-    #y = [28, 27, 24, 22, 21, 23, 40, 61, 85, 104, 122, 128, 131, 128, 122, 106, 78, 68, 68, 79, 88, 101, 111, 125, 143, 154, 158, 157, 157, 155, 154, 144, 130, 114, 105, 93, 79, 65, 53, 39, 30, 25, 24, 28]
-
-    #x = [189, 218, 251, 272, 291, 306, 317, 321, 321, 317, 311, 298, 279, 262, 250, 243, 235, 228, 215, 198, 189, 187, 190, 199, 205, 205, 195, 178, 159, 140, 122, 101, 84, 75, 77, 90, 102, 110, 114, 111, 110, 111, 120, 139, 162]
-    #y = [24, 22, 19, 17, 18, 21, 33, 51, 84, 108, 126, 136, 137, 129, 117, 105, 91, 79, 70, 69, 77, 90, 102, 110, 124, 139, 148, 151, 152, 153, 155, 155, 154, 142, 127, 114, 106, 96, 82, 68, 57, 45, 36, 30, 26]
-
-
-    """#max_change_per_point_meters must be smaller than half desired_points_per_meter
-    if desired_points_per_meter/2 < (max_change_per_point_meters+0.1):
-        print("Error: max_change_per_point_meters is too large!")
-        return
-    """
-    #add the first point of the spine as last, too -> circle
+    # add splines first point also as last one -> create loop
     x.append(x[0])
     y.append(y[0])
-    x,y, _, _, path_len = pyspline.calc_2d_spline_interpolation(x, y, num=100)
+    x, y, _, _, path_len = interpolate2d(x, y, num=raceline_settings['num_interpolation_points'])
     
-    #compute number of control points:
+    # compute number of control points
+    track_in_meters = path_len[-1] * map_resolution
+    num_ctrl_points = math.ceil(track_in_meters * raceline_settings['desired_points_per_meter'])
 
-    track_in_meters = path_len[-1] * opt.get_config()["resolution"]
-    num_ctrl_points = math.ceil(track_in_meters * desired_points_per_meter)
+    # resample spline with desired number of control points
+    x, y, _, _, path_len = interpolate2d(x, y, num=num_ctrl_points)
 
-    #resample spline with desired number of control points:
-    x,y, _, _, path_len = pyspline.calc_2d_spline_interpolation(x, y, num=num_ctrl_points)
+    # create VehicleDescription and Trajectory
+    vd = VehicleDescription(**vehicle_parameter)
+    original = Trajectory(x, y, vd, map_resolution)
 
-    vd = VehicleDescription(haftreibung, vehicle_width_m,  vehicle_mass_kg, vehicle_acceleration_mss, vehicle_deceleration_mss, vehicle_length_m, min_steering_angle_deg, max_steering_angle_deg)
-    original = Trajectory(x, y, vd, opt.get_config()["resolution"])
-
-    #use genetic algorithm to optimize x,y
-    raceline = opt.optimize_raceline(initial_trajectory=original, turning_radius_m=turning_radius_m, num_epochs=num_epochs, num_keep=num_keep, num_population=num_population, 
-                                    num_changes_per_mutation=num_changes_per_mutation, 
-                                    max_change_in_pixels=max_change_per_point_meters/opt.get_config()["resolution"],
-                                    filename="my_map_raceline.csv", num_points_file=300,
-                                    num_ctrl_points=num_ctrl_points)
+    # use genetic algorithm to optimize x, y
+    raceline = opt.optimize_raceline(
+        **evolution_settings,
+        initial_trajectory=original,
+        max_change_in_pixels=raceline_settings['max_change_per_point_meters'] / map_resolution,
+        filename=raceline_settings['csv_file_name'],
+        num_ctrl_points=num_ctrl_points
+    )
 
     raceline.laptime = None
     raceline.do_forwards_pass = True
@@ -292,4 +282,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = sys.argv
+    if (len(args) == 2 and args[1] =='--config'):
+        main(config_file=args[2])
+    else:
+        main(config_file='/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/config/optimizer.yaml')

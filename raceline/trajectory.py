@@ -4,22 +4,26 @@ import pycubicspline.pycubicspline as pyspline
 import numpy
 
 class VehicleDescription:
-    def __init__(self, haftreibung: float = 0.0, 
-                 vehicle_width_m: float = 0.0, 
-                 vehicle_mass: float = 0.0,
-                 vehicle_acceleration_mss: float = 0.0, 
-                 vehicle_deceleration_mss: float = 0.0,
-                 vehicle_length_m: float = 0.0,
-                 vehicle_min_steering_angle: float = 0.0,
-                 vehicle_max_steering_angle: float = 0.0):
-        self.haftreibung = haftreibung
-        self.vehicle_width_m = vehicle_width_m
-        self.vehicle_mass = vehicle_mass
-        self.vehicle_acceleration_mss = vehicle_acceleration_mss
-        self.vehicle_deceleration_mss = vehicle_deceleration_mss
-        self.vehicle_length_m = vehicle_length_m
-        self.vehicle_min_steering_angle = vehicle_min_steering_angle
-        self.vehicle_max_steering_angle = vehicle_max_steering_angle
+    def __init__(
+        self,
+        static_friction: float = 0.0, 
+        width_m: float = 0.0, 
+        mass_kg: float = 0.0,
+        acceleration_mss: float = 0.0, 
+        deceleration_mss: float = 0.0,
+        length_m: float = 0.0,
+        min_steering_angle_deg: float = 0.0,
+        max_steering_angle_deg: float = 0.0
+    ) -> None:
+        
+        self.haftreibung = static_friction
+        self.vehicle_width_m = width_m
+        self.vehicle_mass = mass_kg
+        self.vehicle_acceleration_mss = acceleration_mss
+        self.vehicle_deceleration_mss = deceleration_mss
+        self.vehicle_length_m = length_m
+        self.vehicle_min_steering_angle = min_steering_angle_deg
+        self.vehicle_max_steering_angle = max_steering_angle_deg
 
 class Trajectory:
     def __init__(self, x: list, y: list, vehicle_description: 'VehicleDescription', resolution: float, curvature=None, leave_in_cycle=False, is_a_loop=True, leave_as_is=False):

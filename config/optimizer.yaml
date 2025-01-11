@@ -1,0 +1,25 @@
+optimization_parameter:
+  vehicle_settings:
+    static_friction:        5.0   # kg force to move standing vehicle in lateral direction
+    width_m:                0.6   # 0.3   # half width is minimum distance to any wall at any time
+    mass_kg:                3.0
+    length_m:               0.5
+    acceleration_mss:       7.0   # vehicle acceleration in meters/sec/sec
+    deceleration_mss:       3.0   # vehicle deceleration in meters/sec/sec
+    min_steering_angle_deg: -25
+    max_steering_angle_deg: 25
+
+  raceline_settings:
+    map_path: '/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/raceline/NeuKarte.yaml'
+    csv_file_name: 'my_map_raceline.csv'
+    num_interpolation_points:     100
+    desired_points_per_meter:     1.0   # how many control points to use during optimization per spline (you want as few as possible!)
+    max_change_per_point_meters:  0.5   # how much change to a controlpoint per iteration in meters (should be pretty small; few cm)
+
+  evolution_settings:
+    num_epochs:                 25      # number of optimization epochs
+    num_keep:                   50      # number of trajectories to keep after each epoch
+    num_population:             1000    # population size during epoch
+    num_changes_per_mutation:   2       # number of controlpoint changes during a mutation
+    num_points_file:            300     # number of sample points of optimized raceline
+    turning_radius_m:           0.6     # 0.5   # turning radius of the vehicle in meters
