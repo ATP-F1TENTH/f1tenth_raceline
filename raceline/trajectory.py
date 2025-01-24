@@ -26,7 +26,17 @@ class VehicleDescription:
         self.vehicle_max_steering_angle = max_steering_angle_deg
 
 class Trajectory:
-    def __init__(self, x: list, y: list, vehicle_description: 'VehicleDescription', resolution: float, curvature=None, leave_in_cycle=False, is_a_loop=True, leave_as_is=False):
+    def __init__(
+        self, x: list,
+        y: list,
+        vehicle_description: 'VehicleDescription',
+        resolution: float,
+        curvature=None,
+        leave_in_cycle=False,
+        is_a_loop=True,
+        leave_as_is=False
+    ) -> None:
+        
         self.x = x
         self.y = y
         self.haftreibung = vehicle_description.haftreibung

@@ -88,7 +88,7 @@ class PurePursuit(Node):
         self.raceline = Trajectory(x=[0, 1, 2], y=[0, 1, 2], vehicle_description=vd, resolution=0)
         #TODO: file path from configuration or command line
 
-        self.raceline.load_trajectory_from_file("/root/wette_racecar_ws/minden_raceline.csv")
+        self.raceline.load_trajectory_from_file("/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/raceline/my_map_raceline.csv")
 
         self.lateral_derivation_history = []
         self.last_waypoint_update_velocity = None
@@ -194,8 +194,9 @@ class PurePursuit(Node):
                                         rclpy.time.Time())
             x_vehicle_map = t.transform.translation.x
             y_vehicle_map = t.transform.translation.y
-        except:
+        except Exception as error:
             print(f"No valid transform from {self.map_frame_name} to {self.vehicle_frame_name}. Doin' nothing.", flush=True)
+            print(error)
             drive_msg = AckermannDriveStamped()
             drive_msg.header.frame_id = self.vehicle_frame_name
             drive_msg.header.stamp = self.get_clock().now().to_msg()

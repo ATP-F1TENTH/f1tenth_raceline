@@ -12,6 +12,8 @@ from pycubicspline.pycubicspline import calc_2d_spline_interpolation as interpol
 from trajectory import Trajectory, VehicleDescription
 from map import Map
 
+# Define path to config
+CONFIG = '/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/config/optimizer.yaml'
 
 class RacelineOptimizer:
     
@@ -286,4 +288,4 @@ if __name__ == "__main__":
     if (len(args) == 2 and args[1] =='--config'):
         main(config_file=args[2])
     else:
-        main(config_file='/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/config/optimizer.yaml')
+        main(config_file=CONFIG)
