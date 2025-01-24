@@ -24,32 +24,32 @@ class Map:
     def get_map_size_pixels(self):
         return len(self.__map), len(self.__map[0])
 
-    def safe_trajectory_to_file(self, trajectory: Trajectory, file: str, num_points: int):
+    def safe_trajectory_to_file(self, trajectory: Trajectory, file: str, num_points: int, delimiter: str='\t'):
         """ write computed trajectory to file """
 
-        f = open(file, "w")
-        f.write("x\ty\tvelocity[m]\n")
+        with open(file, "w") as file:
+            file.write(f"x{delimiter}y{delimiter}velocity[m]\n")
 
-        #add second point of spline to end such that the two ends of the spline form a continuous curve
-        x,y, _, _, _ = pyspline.calc_2d_spline_interpolation(trajectory.x + [trajectory.x[1]], trajectory.y + [trajectory.y[1]], num=num_points)
-        
+            #add second point of spline to end such that the two ends of the spline form a continuous curve
+            x, y, _, _, _ = pyspline.calc_2d_spline_interpolation(trajectory.x + [trajectory.x[1]], trajectory.y + [trajectory.y[1]], num=num_points)
+            
 
-        trajectory = Trajectory(x, y, trajectory.haftreibung, trajectory.vehicle_width_m, trajectory.vehicle_acceleration_mss, trajectory.vehicle_deceleration_mss, trajectory.resolution)
-        trajectory.do_forwards_pass = True
-        trajectory.compute_velocity_profile()
+            trajectory = Trajectory(x, y, trajectory.haftreibung, trajectory.vehicle_width_m, trajectory.vehicle_acceleration_mss, trajectory.vehicle_deceleration_mss, trajectory.resolution)
+            trajectory.do_forwards_pass = True
+            trajectory.compute_velocity_profile()
 
-        for i in range(len(trajectory.x)):
-            x_px = trajectory.x[i]
-            y_px = trajectory.y[i]
+            for i in range(len(trajectory.x)):
+                x_px = trajectory.x[i]
+                y_px = trajectory.y[i]
 
-            #transform pixel to coordinates
-            #TODO: Check if x and y should be swapped around!
-            x = x_px * self.__resolution + self.__origin[0]
-            y = y_px * self.__resolution + self.__origin[1]
+                #transform pixel to coordinates
+                #TODO: Check if x and y should be swapped around!
+                x = x_px * self.__resolution + self.__origin[0]
+                y = y_px * self.__resolution + self.__origin[1]
 
-            f.write(f"{x}\t{y}\t{trajectory.velocity_profile[i]}\n")
+                file.write(f"{x}{delimiter}{y}{delimiter}{trajectory.velocity_profile[i]}\n")
 
-        f.close()
+            file.close()
     
     # returns index, on which the trajectory collides with the map. -1 if no collision
     def collision_at(self, trajectory: Trajectory, vehicle_width_in_map_pixels: int):
