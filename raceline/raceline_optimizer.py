@@ -18,11 +18,24 @@ CONFIG = '/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/config/optimize
 class RacelineOptimizer:
     
     def __init__(self, configfile: str) -> None:
+
         self.__config = None
-        self.parse_config(configfile)
-        #reconstruct filepath:
-        path = "/".join(configfile.split("/")[0:-1])
-        self.__map = Map(path + "/" + self.__config["image"], self.__config["origin"], self.__config["resolution"])
+        self.__resolution = None
+
+        with open(configfile, 'r') as file:
+            try:
+                self.__config = yaml.safe_load(file)
+            except Exception as e:
+                print(e)
+                return
+            finally:
+                file.close()
+        
+        # reconstruct filepath
+        image_path = "/".join(configfile.split("/")[0:-1])
+        image_file = image_path + "/" + self.__config["image"]
+        self.__resolution = self.__config["resolution"]
+        self.__map = Map(image_file=image_file, origin=self.__config["origin"], resolution=self.__resolution)
 
     @property
     def map(self) -> Map:
@@ -101,14 +114,9 @@ class RacelineOptimizer:
         #interpolate:
         x, y, yaw, k, travel = interpolate2d(xs, ys, num=num_control_points)
         
-        print(f"Initial Lap Length [m]: {max(travel) * self.__config['resolution']}")
+        print(f"Initial Lap Length [m]: {max(travel) * self.__resolution}")
 
         return x, y
-
-    def parse_config(self, filename: str):
-        f = open(filename, 'r')
-        self.__config = yaml.safe_load(f)
-        f.close()
 
     def optimize_raceline(
         self,
@@ -176,7 +184,7 @@ class RacelineOptimizer:
             #make sure population are NOT driving through non-free space!
             #and that turning radius is feasable for the vehicle
             max_curvature = 1.0 / (turning_radius_m/population[0].resolution)
-            vehicle_width_in_map_pixels = math.ceil(population[0].vehicle_width_m / self.__config['resolution'])
+            vehicle_width_in_map_pixels = math.ceil(population[0].vehicle_width_m / self.__resolution)
             for l in population[:]:
                 lx,ly, _, curvature, _ = interpolate2d(l.x, l.y, num=500)
 
@@ -223,13 +231,13 @@ class RacelineOptimizer:
             population = remove_all_but_top(population, num_keep)
 
             #print length of best raceline.
-            laptime_s = population[-1].get_laptime() * self.get_map().get_resolution()
-            print(f"raceline length/laptime in epoch {e}: {population[-1].get_length() * self.get_map().get_resolution()} / {laptime_s}")
+            laptime_s = population[-1].get_laptime() * self.map.get_resolution()
+            print(f"raceline length/laptime in epoch {e}: {population[-1].get_length() * self.map.get_resolution()} / {laptime_s}")
             self.debug_draw_trajectory(population[-1], f"racelines/racelineEpoch{e}.png", title=f"Epoch {e} - Laptime {laptime_s}s")
-            population[-1].safe_trajectory_to_file(self.get_map(), filename, num_points=num_points_file)
+            population[-1].safe_trajectory_to_file(self.map, filename, num_points=num_points_file)
             
         
-        population[-1].safe_trajectory_to_file(self.get_map(), filename, num_points=num_points_file)
+        population[-1].safe_trajectory_to_file(self.map, filename, num_points=num_points_file)
         return population[-1]
     
 
