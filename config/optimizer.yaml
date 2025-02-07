@@ -10,8 +10,8 @@ optimization_parameter:
     max_steering_angle_deg: 25
 
   raceline_settings:
-    map_path: '/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/maps/2025-01-09_Racetrack_Map.yaml'
-    csv_file_name: '2025-01-09_Racetrack_Map.csv'
+    map_path: /home/itse/atp_f1tenth_racecar_ws/src/f1tenth_raceline/maps/2025-01-09_Racetrack_Map.yaml
+    csv_file_name: 2025-01-09_Racetrack_Map.csv
     num_interpolation_points:     100
     desired_points_per_meter:     1.0   # how many control points to use during optimization per spline (you want as few as possible!)
     max_change_per_point_meters:  0.5   # how much change to a controlpoint per iteration in meters (should be pretty small; few cm)
@@ -25,4 +25,4 @@ optimization_parameter:
     turning_radius_m:           0.6     # 0.5   # turning radius of the vehicle in meters
 
   extraction_settings:
-    config_file: '/home/itse/atp_f1tenth_racecar_ws/src/f1tenth_mpcc/config/pgmMapProcessing.yaml'
+    config_file: /home/itse/atp_f1tenth_racecar_ws/src/f1tenth_mpcc/config/RaceTrackConfig.yaml

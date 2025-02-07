@@ -265,7 +265,7 @@ def main(config_file: str = None):
     extraction_config = extraction_settings['config_file']
     with open(extraction_config, 'r') as file:
         settings = yaml.safe_load(file)
-    settings['start_coordinates'] = [(int(x[0]), int(y[0]))]
+    settings['map_settings']['start_coordinates'] = [(int(x[0]), int(y[0]))]
     with open(extraction_config, 'w') as file:
         file.write(yaml.safe_dump(settings))
 
