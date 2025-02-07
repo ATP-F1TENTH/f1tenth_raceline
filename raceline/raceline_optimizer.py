@@ -250,6 +250,7 @@ def main(config_file: str = None):
             vehicle_parameter = config_parameter['vehicle_settings']
             raceline_settings = config_parameter['raceline_settings']
             evolution_settings = config_parameter['evolution_settings']
+            extraction_settings = config_parameter['extraction_settings']
         except Exception as e:
             print(e)
 
@@ -259,6 +260,14 @@ def main(config_file: str = None):
     
     # for development: fixed start trajectory - in production this should come from waypoints sampled from follow the gap algorithm.
     x, y = opt.get_manual_initial_centerline()
+
+    # Set initial point for racetrack extraction in corresponding config file
+    extraction_config = extraction_settings['config_file']
+    with open(extraction_config, 'r') as file:
+        settings = yaml.safe_load(file)
+    settings['start_coordinates'] = [(int(x[0]), int(y[0]))]
+    with open(extraction_config, 'w') as file:
+        file.write(yaml.safe_dump(settings))
 
     # add splines first point also as last one -> create loop
     x.append(x[0])
