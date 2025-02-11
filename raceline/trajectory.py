@@ -353,37 +353,37 @@ class Trajectory:
         self.length = None
         self.laptime = None
 
-    def safe_trajectory_to_file(self, map: 'Map', file: str, num_points: int):
+    def safe_trajectory_to_file(self, map: 'Map', file: str, num_points: int, delimiter: str=',') -> None:
         """ write computed trajectory to file """
 
-        f = open(file, "w")
-        f.write("x\ty\tvelocity[m]\n")
+        with open(file, "w") as f:
+            f.write(f"x{delimiter}y{delimiter}velocity[m/s]{delimiter}curvature\n")
 
-        #add second point of spline to end such that the two ends of the spline form a continuous curve
-        x,y, _, curvature, _ = pyspline.calc_2d_spline_interpolation(self.x + [self.x[1]], self.y + [self.y[1]], num=num_points)
-        
-        trajectory = Trajectory(x, y, self.get_vehicle_description(), self.resolution, curvature=curvature)
-        trajectory.do_forwards_pass = True
-        trajectory.velocity_profile = None
-        trajectory.compute_velocity_profile()
+            #add second point of spline to end such that the two ends of the spline form a continuous curve
+            x,y, _, curvature, _ = pyspline.calc_2d_spline_interpolation(self.x + [self.x[1]], self.y + [self.y[1]], num=num_points)
+            
+            trajectory = Trajectory(x, y, self.get_vehicle_description(), self.resolution, curvature=curvature)
+            trajectory.do_forwards_pass = True
+            trajectory.velocity_profile = None
+            trajectory.compute_velocity_profile()
 
-        trajectory.remove_overlapping_points(leave_in_cycle=False)
+            trajectory.remove_overlapping_points(leave_in_cycle=False)
 
-        max_x, max_y = map.get_map_size_pixels()
-        resolution = map.get_resolution()
-        origin = map.get_origin()
+            max_x, max_y = map.get_map_size_pixels()
+            resolution = map.get_resolution()
+            origin = map.get_origin()
 
-        for i in range(len(trajectory.x)):
-            x_px = trajectory.x[i]
-            y_px = trajectory.y[i]
+            for i in range(len(trajectory.x)):
+                x_px = trajectory.x[i]
+                y_px = trajectory.y[i]
 
-            #transform pixel to coordinates - y axis needs to be swapped around!
-            x = x_px * resolution + origin[0]
-            y = (max_x - y_px) * resolution + origin[1]   #TODO: Shouldn't this be max_y? Somewhere down the line x and y seem to be swapped by mistake!
+                #transform pixel to coordinates - y axis needs to be swapped around!
+                x = x_px * resolution + origin[0]
+                y = (max_x - y_px) * resolution + origin[1]   #TODO: Shouldn't this be max_y? Somewhere down the line x and y seem to be swapped by mistake!
 
-            f.write(f"{x}\t{y}\t{trajectory.velocity_profile[i]}\t{trajectory.curvature[i]}\n")
+                f.write(f"{x}{delimiter}{y}{delimiter}{trajectory.velocity_profile[i]}{delimiter}{trajectory.curvature[i]}\n")
 
-        f.close()
+            f.close()
 
     def load_trajectory_from_file(self, file: str):
         """ load precomputed trajectory from file """
