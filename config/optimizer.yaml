@@ -23,6 +23,3 @@ optimization_parameter:
     num_changes_per_mutation:   2       # number of controlpoint changes during a mutation
     num_points_file:            300     # number of sample points of optimized raceline
     turning_radius_m:           0.6     # 0.5   # turning radius of the vehicle in meters
-
-  extraction_settings:
-    config_file: /home/itse/atp_f1tenth_racecar_ws/src/f1tenth_mpcc/config/RaceTrackConfig.yaml
